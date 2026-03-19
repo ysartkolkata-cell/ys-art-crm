@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>YS Art CRM Final V8</title>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+
+body{
+margin:0;
+font-family:Arial;
+background:#f4f6fb;
+}
+
+.dark{
+background:#121212;
+color:white;
+}
+
+/* HEADER */
+.header{
+background:linear-gradient(120deg,#4A00E0,#8E2DE2);
+color:white;
+padding:14px;
+display:flex;
+justify-content:space-between;
+align-items:center;
+}
+
+/* CLOCK */
+#clock{
+text-align:center;
+padding:6px;
+font-size:13px;
+}
+
+/* CARDS */
+.cards{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:10px;
+padding:10px;
+}
+
+.card{
+padding:15px;
+border-radius:12px;
+color:white;
+text-align:center;
+}
+
+.blue{background:#2196F3;}
+.green{background:#4CAF50;}
+.orange{background:#FF9800;}
+.purple{background:#9C27B0;}
+
+/* LEADS */
+.lead{
+background:white;
+margin:10px;
+padding:12px;
+border-radius:10px;
+display:flex;
+justify-content:space-between;
+}
+
+.dark .lead{background:#1e1e1e;}
+
+.score{
+padding:3px 8px;
+border-radius:20px;
+font-size:11px;
+color:white;
+}
+
+.hot{background:red;}
+.warm{background:orange;}
+.cold{background:green;}
+
+/* TIMELINE */
+.timeline{
+padding:10px;
+}
+
+.timeline-item{
+border-left:3px solid #4A00E0;
+margin:8px;
+padding-left:10px;
+}
+
+/* AI BUTTON */
+.ask-ai{
+position:fixed;
+bottom:80px;
+right:20px;
+background:linear-gradient(45deg,#6A11CB,#2575FC);
+color:white;
+padding:16px;
+border-radius:50%;
+cursor:pointer;
+}
+
+/* POPUP */
+.popup{
+display:none;
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,0.6);
+justify-content:center;
+align-items:center;
+}
+
+/* AI BOX */
+.ai-box{
+width:360px;
+height:520px;
+border-radius:20px;
+display:flex;
+flex-direction:column;
+overflow:hidden;
+background:white;
+}
+
+.dark .ai-box{background:#222;}
+
+/* HEADER */
+.ai-header{
+background:linear-gradient(120deg,#4A00E0,#8E2DE2);
+color:white;
+padding:10px;
+display:flex;
+justify-content:space-between;
+align-items:center;
+}
+
+/* CLOSE BUTTON */
+.close-btn{
+cursor:pointer;
+font-size:18px;
+}
+
+/* CHAT */
+.ai-chat{
+flex:1;
+padding:10px;
+overflow-y:auto;
+display:flex;
+flex-direction:column;
+gap:8px;
+}
+
+.msg{
+padding:10px;
+border-radius:12px;
+max-width:75%;
+}
+
+.user{
+background:#d1e7ff;
+align-self:flex-end;
+}
+
+.ai{
+background:#f1f1f1;
+align-self:flex-start;
+}
+
+.dark .ai{background:#333;}
+
+/* TYPING */
+.typing{
+display:flex;
+gap:4px;
+padding:5px;
+}
+
+.typing span{
+width:6px;
+height:6px;
+background:#888;
+border-radius:50%;
+animation:blink 1s infinite;
+}
+
+@keyframes blink{
+0%{opacity:0.2}
+50%{opacity:1}
+100%{opacity:0.2}
+}
+
+/* ACTION */
+.actions{
+display:flex;
+gap:5px;
+padding:8px;
+}
+
+.action-card{
+flex:1;
+padding:8px;
+border-radius:8px;
+background:#eee;
+text-align:center;
+cursor:pointer;
+}
+
+.dark .action-card{background:#333;}
+
+/* INPUT */
+.ai-input{
+display:flex;
+padding:10px;
+border-top:1px solid #ddd;
+}
+
+.ai-input input{
+flex:1;
+padding:10px;
+border-radius:20px;
+border:none;
+}
+
+/* MIC */
+.mic{
+background:#4A00E0;
+color:white;
+border:none;
+border-radius:50%;
+padding:10px;
+margin-left:5px;
+cursor:pointer;
+}
+
+.mic.active{
+box-shadow:0 0 10px #4A00E0;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="header">
+YS Art CRM
+<button onclick="toggleDark()">🌙</button>
+</div>
+
+<div id="clock"></div>
+
+<div class="cards">
+<div class="card blue">Leads <h2 id="leads"></h2></div>
+<div class="card green">Customers <h2>2</h2></div>
+<div class="card orange">Orders <h2>1</h2></div>
+<div class="card purple">Revenue <h2>₹52000</h2></div>
+</div>
+
+<h3 style="padding-left:10px;">Leads</h3>
+<div id="leadList"></div>
+
+<h3 style="padding-left:10px;">Timeline</h3>
+<div class="timeline" id="timeline"></div>
+
+<button class="ask-ai" onclick="openAI()">🤖</button>
+
+<!-- AI POPUP -->
+<div class="popup" id="popup">
+<div class="ai-box">
+
+<div class="ai-header">
+<span>🤖 Smart AI</span>
+<span class="close-btn" onclick="closeAI()">✖</span>
+</div>
+
+<div class="ai-chat" id="chat"></div>
+
+<div class="typing" id="typing" style="display:none;">
+<span></span><span></span><span></span>
+</div>
+
+<div class="actions" id="actions"></div>
+
+<div class="ai-input">
+<input id="input" placeholder="Ask AI...">
+<button class="mic" id="mic" onclick="voice()">🎤</button>
+<button class="mic" onclick="send()">➤</button>
+</div>
+
+</div>
+</div>
+
+<script>
+
+// CLOCK
+setInterval(()=>clock.innerText=new Date().toLocaleString(),1000)
+
+// DARK
+function toggleDark(){document.body.classList.toggle("dark")}
+
+// DATA
+let leads=[
+{name:"Rahul",score:85},
+{name:"Riya",score:75},
+{name:"Amit",score:40}
+]
+
+// SCORE
+function getScore(s){return s>80?"hot":s>60?"warm":"cold"}
+
+// RENDER
+function render(){
+leadList.innerHTML=""
+timeline.innerHTML=""
+
+leads.forEach(l=>{
+let s=getScore(l.score)
+
+leadList.innerHTML+=`
+<div class="lead">
+<div><b>${l.name}</b><br><span class="score ${s}">${s}</span></div>
+<div><i class="fa fa-phone"></i></div>
+</div>`
+
+timeline.innerHTML+=`<div class="timeline-item">${l.name} → Score ${l.score}</div>`
+})
+
+document.getElementById("leads").innerText=leads.length
+}
+render()
+
+// AI
+let popup=document.getElementById("popup")
+
+function openAI(){popup.style.display="flex"}
+function closeAI(){popup.style.display="none"}
+
+function send(){
+let t=input.value.trim()
+if(!t) return
+
+chat.innerHTML+=`<div class="msg user">${t}</div>`
+input.value=""
+
+typing.style.display="flex"
+
+setTimeout(()=>{
+typing.style.display="none"
+
+let res=smartAI(t)
+
+chat.innerHTML+=`<div class="msg ai">${res}</div>`
+
+generateActions(res)
+
+chat.scrollTop=chat.scrollHeight
+
+},700)
+}
+
+// SMART AI
+function smartAI(t){
+
+t=t.toLowerCase()
+
+let hot=leads.filter(l=>l.score>80).map(l=>l.name)
+let warm=leads.filter(l=>l.score>60).map(l=>l.name)
+
+if(t.includes("call")) return "📞 Call: "+hot.join(", ")
+if(t.includes("follow")) return "🔔 Follow: "+warm.join(", ")
+if(t.includes("close")) return "💰 Close deal with "+hot[0]
+
+return "🤖 Focus on high priority leads"
+}
+
+// ACTIONS
+function generateActions(res){
+
+actions.innerHTML=""
+
+if(res.includes("Call")){
+actions.innerHTML+=`<div class="action-card">📞 Call</div>`
+}
+
+if(res.includes("Follow")){
+actions.innerHTML+=`<div class="action-card">🔔 Reminder</div>`
+}
+
+if(res.includes("Close")){
+actions.innerHTML+=`<div class="action-card">💰 Mark Won</div>`
+}
+
+}
+
+// VOICE
+function voice(){
+
+let mic=document.getElementById("mic")
+
+if(!('webkitSpeechRecognition'in window)){
+alert("Voice not supported")
+return
+}
+
+mic.classList.add("active")
+
+let r=new webkitSpeechRecognition()
+r.start()
+
+r.onresult=(e)=>{
+input.value=e.results[0][0].transcript
+mic.classList.remove("active")
+send()
+}
+
+r.onerror=()=>mic.classList.remove("active")
+}
+
+</script>
+
+</body>
+</html>
